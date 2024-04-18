@@ -5,6 +5,8 @@ import cv2
 from simple_facerec import SimpleFacerec
 import mysql.connector
 from datetime import datetime
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 app = Flask(__name__)
 
@@ -17,9 +19,27 @@ connection = mysql.connector.connect(
     host="projectisked.duckdns.org",
     user="admin",
     password="pass",
-    database="vistagrade"
+    database="u627005231_finalface"
 )
 
+directory_to_watch = "C:\\xampp2\\htdocs\\system\\pages\\student\\images\\"
+
+
+# Watchdog event handler for file changes
+class ImageChangeHandler(FileSystemEventHandler):
+    def on_any_event(self, event):
+        if event.is_directory:
+            return
+        if event.event_type == 'created' or event.event_type == 'modified':
+            print(f'Change detected in {event.src_path}')
+            sfr.reload_encoding_images(directory_to_watch)
+
+
+# Start watching the directory for changes
+observer = Observer()
+event_handler = ImageChangeHandler()
+observer.schedule(event_handler, directory_to_watch, recursive=True)
+observer.start()
 
 def showname(name, subject, teacher, timeinout):
     try:
